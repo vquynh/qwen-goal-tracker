@@ -1,49 +1,127 @@
+// src/index.ts
 import express from 'express';
-import { createConnection } from 'typeorm';
+import { AppDataSource } from './data-source';
 import { Goal } from './entities/Goal';
 import { Action } from './entities/Action';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsDoc from 'swagger-jsdoc';
+import { SwaggerSpec } from './swaggerConfig';
 
-createConnection().then(() => {
-    const app = express();
-    app.use(express.json());
+const app = express();
+app.use(express.json());
 
-    // Create Goal
-    app.post('/goals', async (req, res) => {
-        const goal = Goal.create(req.body);
-        await goal.save();
-        res.status(201).json(goal);
-    });
+// Initialize Swagger
 
-    // Get All Goals with Actions
-    app.get('/goals', async (_req, res) => {
-        const goals = await Goal.find({ relations: ['actions'] });
-        res.json(goals);
-    });
+const swaggerDocs = swaggerJsDoc(SwaggerSpec);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-    // Update Goal
-    app.put('/goals/:id', async (req, res) => {
-        const goal = await Goal.findOne(req.params.id);
-        if (!goal) return res.status(404).json({ error: 'Goal not found' });
-        Goal.merge(goal, req.body);
-        await goal.save();
-        res.json(goal);
-    });
+// Get repositories
+const goalRepository = AppDataSource.getRepository(Goal);
+const actionRepository = AppDataSource.getRepository(Action);
 
-    // Create Action
-    app.post('/actions', async (req, res) => {
-        const action = Action.create(req.body);
-        await action.save();
-        res.status(201).json(action);
-    });
-
-    // Update Action
-    app.put('/actions/:id', async (req, res) => {
-        const action = await Action.findOne(req.params.id);
-        if (!action) return res.status(404).json({ error: 'Action not found' });
-        Action.merge(action, req.body);
-        await action.save();
-        res.json(action);
-    });
-
-    app.listen(5000, () => console.log('Server running on port 5000'));
+// Routes
+/**
+ * @openapi
+ * /goals:
+ *   post:
+ *     summary: Create a new goal
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               deadline:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Created goal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Goal'
+ */
+app.post('/goals', async (req, res) => {
+    const goal = goalRepository.create(req.body);
+    await goalRepository.save(goal);
+    res.status(201).json(goal);
 });
+
+app.get('/goals', async (_req, res) => {
+    const goals = await goalRepository.find({ relations: ['actions'] });
+    res.json(goals);
+});
+
+app.put('/goals/:id', async (req, res) => {
+    const goal = await goalRepository.findOne({
+        where: { id: req.params.id },
+        relations: ['actions']
+    });
+    if (!goal) return res.status(404).json({ error: 'Goal not found' });
+
+    goalRepository.merge(goal, req.body);
+    await goalRepository.save(goal);
+    res.json(goal);
+});
+
+/**
+ * @openapi
+ * /actions:
+ *   post:
+ *     summary: Create a new action
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               start_date:
+ *                 type: string
+ *                 format: date
+ *               end_date:
+ *                 type: string
+ *                 format: date
+ *               interval:
+ *                 type: string
+ *                 example: daily
+ *               status:
+ *                 type: string
+ *                 example: pending
+ *               goal_id:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created action
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Action'
+ */
+app.post('/actions', async (req, res) => {
+    const action = actionRepository.create(req.body);
+    await actionRepository.save(action);
+    res.status(201).json(action);
+});
+
+app.put('/actions/:id', async (req, res) => {
+    const action = await actionRepository.findOneBy({ id: req.params.id });
+    if (!action) return res.status(404).json({ error: 'Action not found' });
+
+    actionRepository.merge(action, req.body);
+    await actionRepository.save(action);
+    res.json(action);
+});
+
+// Start server
+AppDataSource.initialize()
+    .then(() => {
+        app.listen(5678, () => console.log('Server running on port 5678'));
+    })
+    .catch((error) => console.log('Data Source initialization error:', error));

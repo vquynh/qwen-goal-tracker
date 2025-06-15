@@ -6,10 +6,16 @@
       "target": "es2021",
       "module": "commonjs",
       "moduleResolution": "node",
-      "outDir": "./build",
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "esModuleInterop": true,
       "emitDecoratorMetadata": true,
       "experimentalDecorators": true,
       "sourceMap": true,
-      "allowSyntheticDefaultImports": true
-   }
+      "allowSyntheticDefaultImports": true,
+   },
+   "include": [
+      "src/**/*",
+      "tests/**/*"
+   ]
 }
