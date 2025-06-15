@@ -6,7 +6,9 @@ import { Action } from './entities/Action';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import { SwaggerSpec } from './swaggerConfig';
+import dotenv from 'dotenv';
 
+dotenv.config();
 const app = express();
 app.use(express.json());
 
@@ -122,6 +124,6 @@ app.put('/actions/:id', async (req, res) => {
 // Start server
 AppDataSource.initialize()
     .then(() => {
-        app.listen(5678, () => console.log('Server running on port 5678'));
+        app.listen(process.env.PORT, () => console.log('Server running on port ' + process.env.PORT));
     })
     .catch((error) => console.log('Data Source initialization error:', error));

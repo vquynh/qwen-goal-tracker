@@ -10,8 +10,8 @@ export const SwaggerSpec = {
             },
             servers: [
                 {
-                    url: 'http://localhost:5678',
-                    description: 'Development server',
+                    url: process.env.APP_URL,
+                    description: 'Development server: ' + process.env.APP_URL,
                 },
             ],
             paths: {

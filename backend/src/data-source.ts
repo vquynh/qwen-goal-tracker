@@ -5,11 +5,7 @@ import {Action} from "./entities/Action";
 
 export const AppDataSource = new DataSource({
     type: "postgres",
-    host: "localhost",
-    port: 5432,
-    username: "",
-    password: "postgres",
-    database: "postgres",
+    url: process.env.DATABASE_URL,
     synchronize: true,
     logging: true,
     entities: [Goal, Action],
