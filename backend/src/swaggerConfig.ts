@@ -11,7 +11,7 @@ export const SwaggerSpec = {
             servers: [
                 {
                     url: process.env.APP_URL,
-                    description: 'Development server: ' + process.env.APP_URL,
+                    description: 'Development server',
                 },
             ],
             paths: {
