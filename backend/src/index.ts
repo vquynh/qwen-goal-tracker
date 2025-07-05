@@ -13,7 +13,6 @@ const app = express();
 app.use(express.json());
 
 // Initialize Swagger
-
 const swaggerDocs = swaggerJsDoc(SwaggerSpec);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
