@@ -1,11 +1,11 @@
 // src/index.ts
 import express from 'express';
-import { AppDataSource } from './data-source';
-import { Goal } from './entities/Goal';
-import { Action } from './entities/Action';
+import {AppDataSource} from './data-source';
+import {Goal} from './entities/Goal';
+import {Action} from './entities/Action';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
-import { SwaggerSpec } from './swaggerConfig';
+import {SwaggerSpec} from './swaggerConfig';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -21,31 +21,6 @@ const goalRepository = AppDataSource.getRepository(Goal);
 const actionRepository = AppDataSource.getRepository(Action);
 
 // Routes
-/**
- * @openapi
- * /goals:
- *   post:
- *     summary: Create a new goal
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               deadline:
- *                 type: string
- *                 format: date
- *     responses:
- *       201:
- *         description: Created goal
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Goal'
- */
 app.post('/goals', async (req, res) => {
     const goal = goalRepository.create(req.body);
     await goalRepository.save(goal);
@@ -78,46 +53,16 @@ app.put('/goals/:id', async (req, res) => {
     res.json(goal);
 });
 
-/**
- * @openapi
- * /actions:
- *   post:
- *     summary: Create a new action
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               start_date:
- *                 type: string
- *                 format: date
- *               end_date:
- *                 type: string
- *                 format: date
- *               interval:
- *                 type: string
- *                 example: daily
- *               status:
- *                 type: string
- *                 example: pending
- *               goal_id:
- *                 type: string
- *     responses:
- *       201:
- *         description: Created action
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Action'
- */
-app.post('/actions', async (req, res) => {
-    const action = actionRepository.create(req.body);
+app.post('/goals/:id/actions', async (req, res) => {
+    const action = actionRepository.create(req.body) as unknown as Action;
+    action.goal = await goalRepository.findOneBy({id: req.params.id});
     await actionRepository.save(action);
     res.status(201).json(action);
+});
+
+app.get('/goals/:id/actions', async (req, res) => {
+    const actions = await actionRepository.findBy({goal: { id: req.params.id }});
+    res.status(200).json(actions);
 });
 
 app.put('/actions/:id', async (req, res) => {
