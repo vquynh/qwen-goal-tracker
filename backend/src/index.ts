@@ -57,6 +57,15 @@ app.get('/goals', async (_req, res) => {
     res.json(goals);
 });
 
+app.get('/goals/:id', async (req, res) => {
+    const goal = await goalRepository.findOne({
+        where: { id: req.params.id },
+        relations: ['actions']
+    });
+    if (!goal) return res.status(404).json({ error: 'Goal not found' });
+    res.json(goal);
+});
+
 app.put('/goals/:id', async (req, res) => {
     const goal = await goalRepository.findOne({
         where: { id: req.params.id },
