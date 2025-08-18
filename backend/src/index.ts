@@ -1,5 +1,6 @@
 // src/index.ts
 import express from 'express';
+import cors from 'cors';
 import {AppDataSource} from './data-source';
 import {Goal} from './entities/Goal';
 import {Action} from './entities/Action';
@@ -8,9 +9,25 @@ import swaggerJsDoc from 'swagger-jsdoc';
 import {SwaggerSpec} from './swaggerConfig';
 import dotenv from 'dotenv';
 
+const allowedOrigins = [
+    'http://localhost:3000',
+    'https://your-production-frontend.com'
+];
+
 dotenv.config();
 const app = express();
 app.use(express.json());
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 
 // Initialize Swagger
 const swaggerDocs = swaggerJsDoc(SwaggerSpec);

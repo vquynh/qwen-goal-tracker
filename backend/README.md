@@ -1,4 +1,4 @@
-# Awesome Project Build with TypeORM
+# Goal Tracker API with TypeORM
 
 Steps to run this project:
 
