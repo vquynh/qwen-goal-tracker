@@ -40,7 +40,7 @@ export const useActionValidation = () => {
     const validateAction = useCallback((formData: ActionFormData) => {
         const newErrors: Record<string, string> = {};
 
-        if (!formData.title.trim()) {
+        if (!formData.title?.trim()) {
             newErrors.title = 'Title is required';
         }
 
@@ -65,9 +65,35 @@ export const useActionValidation = () => {
         return Object.keys(newErrors).length === 0;
     }, []);
 
+    // Add a new function for partial validation
+    const validateField = useCallback((field: keyof ActionFormData, value: string, currentData: ActionFormData) => {
+        const validationData = {
+            ...currentData,
+            [field]: value
+        };
+
+        // Only validate relevant fields
+        if (field === 'title' && !value.trim()) {
+            return 'Title is required';
+        }
+
+        if ((field === 'start_date' || field === 'end_date') &&
+            validationData.start_date && validationData.end_date) {
+            const startDate = new Date(validationData.start_date);
+            const endDate = new Date(validationData.end_date);
+
+            if (endDate < startDate) {
+                return 'End date must be after start date';
+            }
+        }
+
+        return '';
+    }, []);
+
     return {
         errors,
         validateAction,
+        validateField,
         clearErrors: () => setErrors({})
     };
 };
