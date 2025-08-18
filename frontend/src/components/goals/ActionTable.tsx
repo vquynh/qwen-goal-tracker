@@ -21,8 +21,15 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
         interval: 'daily'
     });
     const { createAction, updateAction, deleteAction } = useGoals();
-    const { errors, validateAction, clearErrors } = useActionValidation();
-
+    const {
+        errors,
+        fieldErrors,
+        validateAction,
+        validateField,
+        setFieldError,
+        clearFieldError,
+        clearErrors
+    } = useActionValidation();
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -44,19 +51,11 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
     };
 
     const handleUpdate = async (actionId: string, field: keyof ActionFormData, value: string) => {
-        // Find the current action data
         const currentAction = actions.find(a => a.id === actionId);
         if (!currentAction) return;
 
-        // Create a copy with the updated field
-        const updatedAction = {
-            ...currentAction,
-            [field]: value
-        };
-
-        // Only validate when changing date fields
+        // For date fields, do field-specific validation
         if (field === 'start_date' || field === 'end_date') {
-            // Create a validation object with just the date fields
             const validationData = {
                 title: currentAction.title,
                 start_date: field === 'start_date' ? value : currentAction.start_date,
@@ -64,10 +63,16 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
                 interval: currentAction.interval
             };
 
-            const isValid = validateAction(validationData);
+            const error = validateField(field, value, validationData);
+            const errorKey = `${actionId}-${field}`;
 
-            // If invalid, don't proceed with the update
-            if (!isValid) {
+            if (error) {
+                setFieldError(errorKey, error);
+            } else {
+                clearFieldError(errorKey);
+            }
+
+            if (error) {
                 return;
             }
         }
@@ -75,6 +80,9 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
         // Proceed with the update
         try {
             await updateAction(actionId, { [field]: value });
+
+            // Clear field-specific error after successful update
+            clearFieldError(`${actionId}-${field}`);
         } catch (err) {
             // Errors are handled in context
         }

@@ -36,7 +36,32 @@ export const useGoalValidation = () => {
 
 export const useActionValidation = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+    // Clear all errors
+    const clearErrors = () => {
+        setErrors({});
+        setFieldErrors({});
+    };
+
+    // Clear errors for a specific field
+    const clearFieldError = (field: string) => {
+        setFieldErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[field];
+            return newErrors;
+        });
+    };
+
+    // Set error for a specific field
+    const setFieldError = (field: string, message: string) => {
+        setFieldErrors(prev => ({
+            ...prev,
+            [field]: message
+        }));
+    };
+
+    // Full form validation (for creating new actions)
     const validateAction = useCallback((formData: ActionFormData) => {
         const newErrors: Record<string, string> = {};
 
@@ -65,22 +90,25 @@ export const useActionValidation = () => {
         return Object.keys(newErrors).length === 0;
     }, []);
 
-    // Add a new function for partial validation
-    const validateField = useCallback((field: keyof ActionFormData, value: string, currentData: ActionFormData) => {
-        const validationData = {
-            ...currentData,
-            [field]: value
-        };
-
+    // Field-specific validation
+    const validateField = useCallback((
+        field: keyof ActionFormData,
+        value: string,
+        currentData: ActionFormData
+    ) => {
         // Only validate relevant fields
         if (field === 'title' && !value.trim()) {
             return 'Title is required';
         }
 
         if ((field === 'start_date' || field === 'end_date') &&
-            validationData.start_date && validationData.end_date) {
-            const startDate = new Date(validationData.start_date);
-            const endDate = new Date(validationData.end_date);
+            currentData.start_date && currentData.end_date) {
+            const startDate = new Date(
+                field === 'start_date' ? value : currentData.start_date
+            );
+            const endDate = new Date(
+                field === 'end_date' ? value : currentData.end_date
+            );
 
             if (endDate < startDate) {
                 return 'End date must be after start date';
@@ -92,8 +120,11 @@ export const useActionValidation = () => {
 
     return {
         errors,
+        fieldErrors,
         validateAction,
         validateField,
-        clearErrors: () => setErrors({})
+        setFieldError,
+        clearFieldError,
+        clearErrors
     };
 };
