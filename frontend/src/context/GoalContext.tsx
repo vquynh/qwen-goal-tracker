@@ -50,10 +50,17 @@ export const GoalProvider = ({ children }: { children: ReactNode }) => {
         try {
             setError(null);
             const newGoal = await apiCreateGoal(goalData);
-            setGoals(prev => [...prev, newGoal]);
+
+            // Ensure the new goal has an action array
+            const normalizedGoal = {
+                ...newGoal,
+                actions: newGoal.actions || []
+            };
+
+            setGoals(prev => [...prev, normalizedGoal]);
         } catch (err: any) {
             setError(err.message || 'Failed to create goal');
-            throw err; // Re-throw for form to handle field errors
+            throw err;
         }
     };
 
