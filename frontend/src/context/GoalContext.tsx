@@ -85,9 +85,9 @@ export const GoalProvider = ({ children }: { children: ReactNode }) => {
     const createAction = async (goalId: string, actionData: ActionFormData) => {
         try {
             setError(null);
-            const newAction = await apiCreateAction({
+            const newAction = await apiCreateAction(
+                goalId, {
                 ...actionData,
-                goal_id: goalId
             });
 
             setGoals(prev =>

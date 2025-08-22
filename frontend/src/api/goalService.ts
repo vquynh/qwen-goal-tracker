@@ -49,14 +49,20 @@ export const deleteGoal = async (id: string): Promise<void> => {
     await api.delete(`/goals/${id}`);
 };
 
-export const createAction = async (actionData: {
+export const createAction = async (goalId: string, actionData: {
     title: string;
     start_date: string;
     end_date: string;
     interval: string;
-    goal_id: string;
 }): Promise<Action> => {
-    const response = await api.post<Action>('/actions', actionData);
+    // Format dates to ensure proper ISO format
+    const formattedData = {
+        ...actionData,
+        start_date: new Date(actionData.start_date).toISOString().split('T')[0],
+        end_date: new Date(actionData.end_date).toISOString().split('T')[0]
+    };
+
+    const response = await api.post<Action>(`/goals/${goalId}/actions`, formattedData);
     return response.data;
 };
 
