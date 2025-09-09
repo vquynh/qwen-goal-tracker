@@ -24,6 +24,7 @@ export interface ActionFormData {
     start_date: string;
     end_date: string;
     interval: 'daily' | 'weekly' | 'monthly';
+    status: 'pending' | 'completed' | 'overdue';
 }
 
 export interface ApiError {

@@ -18,12 +18,12 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
         title: '',
         start_date: '',
         end_date: '',
-        interval: 'daily'
+        interval: 'daily',
+        status: 'pending'
     });
-    const { createAction, updateAction, deleteAction } = useGoals();
+    const { createAction, updateAction} = useGoals();
     const {
         errors,
-        fieldErrors,
         validateAction,
         validateField,
         setFieldError,
@@ -41,7 +41,8 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
                     title: '',
                     start_date: '',
                     end_date: '',
-                    interval: 'daily'
+                    interval: 'daily',
+                    status: 'pending'
                 });
                 clearErrors();
             } catch (err) {
@@ -60,7 +61,8 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
                 title: currentAction.title,
                 start_date: field === 'start_date' ? value : currentAction.start_date,
                 end_date: field === 'end_date' ? value : currentAction.end_date,
-                interval: currentAction.interval
+                interval: currentAction.interval,
+                status: currentAction.status
             };
 
             const error = validateField(field, value, validationData);
@@ -94,7 +96,8 @@ const ActionTable: React.FC<ActionTableProps> = ({ goalId, actions }) => {
             title: '',
             start_date: '',
             end_date: '',
-            interval: 'daily'
+            interval: 'daily',
+            status: 'pending'
         });
         clearErrors();
     };
