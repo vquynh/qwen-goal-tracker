@@ -11,7 +11,7 @@ import dotenv from 'dotenv';
 
 const allowedOrigins = [
     'http://localhost:3000',
-    'https://your-production-frontend.com'
+    'https://qwen-goal-tracker-plf4.vercel.app'
 ];
 
 dotenv.config();
