@@ -1,3 +1,4 @@
+// src/components/ui/Input.tsx
 import React from 'react';
 import ErrorMessage from './ErrorMessage';
 
@@ -10,6 +11,7 @@ interface InputProps {
     type?: string;
     placeholder?: string;
     required?: boolean;
+    min?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -20,7 +22,8 @@ const Input: React.FC<InputProps> = ({
                                          error,
                                          type = 'text',
                                          placeholder = '',
-                                         required = false
+                                         required = false,
+                                         min,
                                      }) => {
     return (
         <div className="mb-4">
@@ -32,6 +35,7 @@ const Input: React.FC<InputProps> = ({
                 type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
+                min={min}
                 className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 ${
                     error ? 'border-red-500' : 'border-gray-300'
                 }`}
