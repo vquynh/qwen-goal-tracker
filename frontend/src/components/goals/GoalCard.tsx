@@ -20,7 +20,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
         title: '',
         start_date: '',
         end_date: '',
-        interval: 'weekly'
+        interval: 'once'
     });
 
     // Toggle action status between pending/completed
@@ -118,7 +118,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 title: actionFormData.title,
                 start_date: actionFormData.start_date,
                 end_date: actionFormData.end_date,
-                interval: actionFormData.interval as 'daily' | 'weekly' | 'monthly',
+                interval: actionFormData.interval as 'once' | 'daily' | 'weekly' | 'monthly',
                 status: 'pending'
             });
 
@@ -127,7 +127,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 title: '',
                 start_date: '',
                 end_date: '',
-                interval: 'weekly'
+                interval: 'once'
             });
             setIsAddingAction(false);
         } catch (error) {
@@ -141,7 +141,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
             title: '',
             start_date: '',
             end_date: '',
-            interval: 'weekly'
+            interval: 'once'
         });
         setIsAddingAction(false);
     };
@@ -209,7 +209,8 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interval</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -233,6 +234,9 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 {formatDateForInput(action.end_date)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                                {action.interval}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
                                 {action.status || '-'}
@@ -259,6 +263,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                             onChange={(e) => setActionFormData({...actionFormData, interval: e.target.value})}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         >
+                            <option value="once">Once</option>
                             <option value="weekly">Weekly</option>
                             <option value="biweekly">Biweekly</option>
                             <option value="monthly">Monthly</option>

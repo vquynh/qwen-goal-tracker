@@ -10,7 +10,7 @@ export interface Action {
     title: string;
     start_date: string;
     end_date: string;
-    interval: 'daily' | 'weekly' | 'monthly';
+    interval: 'once' |'daily' | 'weekly' | 'monthly';
     status: 'pending' | 'completed' | 'overdue';
 }
 
@@ -23,7 +23,7 @@ export interface ActionFormData {
     title: string;
     start_date: string;
     end_date: string;
-    interval: 'daily' | 'weekly' | 'monthly';
+    interval: 'once' |'daily' | 'weekly' | 'monthly';
     status: 'pending' | 'completed' | 'overdue';
 }
 
