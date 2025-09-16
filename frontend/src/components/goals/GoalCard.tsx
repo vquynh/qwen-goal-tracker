@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Goal, Action } from '../../types';
 import { useGoals } from '../../context/GoalContext';
 import { safeParseDate, formatDateForInput } from '../../utils/dateUtils';
-import { PlusIcon, PencilIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, CheckIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 interface GoalCardProps {
     goal: Goal;
@@ -10,8 +10,9 @@ interface GoalCardProps {
 
 const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
     const { updateAction, deleteAction, updateGoal, createAction } = useGoals();
-    const [isEditing, setIsEditing] = useState(false);
+    const [isEditingGoal, setIsEditingGoal] = useState(false);
     const [isAddingAction, setIsAddingAction] = useState(false);
+    const [editingActionId, setEditingActionId] = useState<string | null>(null);
     const [goalFormData, setGoalFormData] = useState({
         title: goal.title,
         deadline: goal.deadline
@@ -20,8 +21,10 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
         title: '',
         start_date: '',
         end_date: '',
-        interval: 'once'
+        interval: 'once',
+        status: 'pending'
     });
+    const [editingActionData, setEditingActionData] = useState<Action | null>(null);
 
     // Toggle action status between pending/completed
     const handleToggleStatus = async (actionId: string) => {
@@ -35,32 +38,57 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
         }
     };
 
-    // Handle updates to action fields
-    const handleUpdate = async (actionId: string, field: keyof Action, value: string) => {
+    // Enter edit mode for an action
+    const handleEditAction = (action: Action) => {
+        setEditingActionId(action.id);
+        setEditingActionData({ ...action });
+    };
+
+    // Handle updates to action fields during editing
+    const handleEditingActionChange = (field: keyof Action, value: string) => {
+        if (editingActionData) {
+            setEditingActionData({
+                ...editingActionData,
+                [field]: value
+            });
+        }
+    };
+
+    // Save edited action
+    const handleSaveEditedAction = async () => {
+        if (!editingActionData) return;
+
         try {
-            const updates: Partial<Action> = { [field]: value };
+            // Validate dates
+            const startDate = safeParseDate(editingActionData.start_date);
+            const endDate = safeParseDate(editingActionData.end_date);
 
-            // Special handling for date fields to ensure proper validation
-            if (field === 'start_date' || field === 'end_date') {
-                const currentAction = goal.actions.find(a => a.id === actionId);
-                if (!currentAction) return;
-
-                const startDate = field === 'start_date' ? value : currentAction.start_date;
-                const endDate = field === 'end_date' ? value : currentAction.end_date;
-
-                const parsedStartDate = safeParseDate(startDate);
-                const parsedEndDate = safeParseDate(endDate);
-
-                if (parsedStartDate && parsedEndDate && parsedEndDate < parsedStartDate) {
-                    alert('End date must be after start date');
-                    return;
-                }
+            if (startDate && endDate && endDate < startDate) {
+                alert('End date must be after start date');
+                return;
             }
 
-            await updateAction(actionId, updates);
+            // Save the updated action
+            await updateAction(editingActionData.id, {
+                title: editingActionData.title,
+                start_date: editingActionData.start_date,
+                end_date: editingActionData.end_date,
+                interval: editingActionData.interval,
+                status: editingActionData.status
+            });
+
+            // Exit edit mode
+            setEditingActionId(null);
+            setEditingActionData(null);
         } catch (error) {
-            console.error('Failed to update action:', error);
+            console.error('Failed to save edited action:', error);
         }
+    };
+
+    // Cancel action editing
+    const handleCancelActionEdit = () => {
+        setEditingActionId(null);
+        setEditingActionData(null);
     };
 
     // Delete an action
@@ -81,15 +109,15 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
             if (goalFormData.title !== goal.title || goalFormData.deadline !== goal.deadline) {
                 await updateGoal(goal.id, goalFormData);
             }
-            setIsEditing(false);
+            setIsEditingGoal(false);
         } catch (error) {
             console.error('Failed to save goal edits:', error);
         }
     };
 
     // Cancel goal edits
-    const handleCancelEdits = () => {
-        setIsEditing(false);
+    const handleCancelGoalEdits = () => {
+        setIsEditingGoal(false);
         setGoalFormData({
             title: goal.title,
             deadline: goal.deadline
@@ -127,7 +155,8 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 title: '',
                 start_date: '',
                 end_date: '',
-                interval: 'once'
+                interval: 'once',
+                status: 'pending',
             });
             setIsAddingAction(false);
         } catch (error) {
@@ -141,7 +170,8 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
             title: '',
             start_date: '',
             end_date: '',
-            interval: 'once'
+            interval: 'once',
+            status: 'pending',
         });
         setIsAddingAction(false);
     };
@@ -150,7 +180,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6 transition-all duration-300 relative">
             {/* Goal Header */}
             <div className="bg-yellow-400 text-white p-4">
-                {isEditing ? (
+                {isEditingGoal ? (
                     <div className="flex flex-col space-y-2">
                         <input
                             type="text"
@@ -174,7 +204,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                                 Save
                             </button>
                             <button
-                                onClick={handleCancelEdits}
+                                onClick={handleCancelGoalEdits}
                                 className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center"
                             >
                                 <XMarkIcon className="h-5 w-5 mr-1" />
@@ -190,7 +220,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 Deadline: {new Date(goal.deadline).toLocaleDateString()}
               </span>
                             <button
-                                onClick={() => setIsEditing(true)}
+                                onClick={() => setIsEditingGoal(true)}
                                 className="bg-white text-yellow-500 p-2 rounded hover:bg-gray-100"
                                 aria-label="Edit goal"
                             >
@@ -214,35 +244,139 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                     </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                    {goal.actions.map(action => (
-                        <tr key={action.id} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="flex items-center">
-                                    <input
-                                        type="checkbox"
-                                        checked={action.status === 'completed'}
-                                        onChange={() => handleToggleStatus(action.id)}
-                                        className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                                    />
-                                    <span className={action.status === 'completed' ? 'line-through text-gray-400' : ''}>
-                      {action.title}
-                    </span>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                {formatDateForInput(action.start_date)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                {formatDateForInput(action.end_date)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                {action.interval}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                                {action.status || '-'}
-                            </td>
-                        </tr>
-                    ))}
+                    {goal.actions.map(action => {
+                        const isEditing = editingActionId === action.id;
+
+                        return (
+                            <tr
+                                key={action.id}
+                                className={`hover:bg-gray-50 transition-colors ${isEditing ? 'bg-blue-50' : ''}`}
+                            >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {isEditing ? (
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={editingActionData?.status === 'completed'}
+                                                onChange={(e) =>
+                                                    handleEditingActionChange('status', e.target.checked ? 'completed' : 'pending')
+                                                }
+                                                className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <input
+                                                type="text"
+                                                value={editingActionData?.title || ''}
+                                                onChange={(e) => handleEditingActionChange('title', e.target.value)}
+                                                className="w-full px-2 py-1 border border-gray-300 rounded"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="flex items-center"
+                                            onClick={() => handleEditAction(action)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={action.status === 'completed'}
+                                                onChange={() => handleToggleStatus(action.id)}
+                                                className="mr-2 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <span className={action.status === 'completed' ? 'line-through text-gray-400' : ''}>
+                          {action.title}
+                        </span>
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={formatDateForInput(editingActionData?.start_date || '')}
+                                            onChange={(e) => handleEditingActionChange('start_date', e.target.value)}
+                                            className="w-full px-2 py-1 border border-gray-300 rounded"
+                                        />
+                                    ) : (
+                                        formatDateForInput(action.start_date)
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {isEditing ? (
+                                        <input
+                                            type="date"
+                                            value={formatDateForInput(editingActionData?.end_date || '')}
+                                            onChange={(e) => handleEditingActionChange('end_date', e.target.value)}
+                                            min={formatDateForInput(editingActionData?.start_date || '')}
+                                            className="w-full px-2 py-1 border border-gray-300 rounded"
+                                        />
+                                    ) : (
+                                        formatDateForInput(action.end_date)
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {isEditing ? (
+                                        <div className="flex items-center space-x-2">
+                                            <select
+                                                className="bg-gray-100 border border-gray-300 rounded-md px-2 py-1 w-full"
+                                                value={editingActionData?.status || ''}
+                                                onChange={(e) => handleEditingActionChange('status', e.target.value)}
+                                            >
+                                                <option value="">Select status</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="inprogress">In progress</option>
+                                                <option value="done">Done</option>
+                                                <option value="overdue">Overdue</option>
+                                            </select>
+                                        </div>
+                                    ) : (
+                                        action.status || '-'
+                                    )}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                    {isEditing ? (
+                                        <div className="flex items-center space-x-2">
+                                            <select
+                                                className="bg-gray-100 border border-gray-300 rounded-md px-2 py-1 w-full"
+                                                value={editingActionData?.interval || ''}
+                                                onChange={(e) => handleEditingActionChange('interval', e.target.value)}
+                                            >
+                                                <option value="">Select interval</option>
+                                                <option value="once">Once</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="biweekly">Biweekly</option>
+                                                <option value="monthly">Monthly</option>
+                                            </select>
+                                            <div className="flex space-x-1">
+                                                <button
+                                                    onClick={handleSaveEditedAction}
+                                                    className="text-green-600 hover:text-green-800 p-1"
+                                                    title="Save changes"
+                                                >
+                                                    <CheckIcon className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelActionEdit}
+                                                    className="text-gray-600 hover:text-gray-800 p-1"
+                                                    title="Cancel editing"
+                                                >
+                                                    <XMarkIcon className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteAction(action.id)}
+                                                    className="text-red-600 hover:text-red-800 p-1"
+                                                    title="Delete action"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        action.interval || 'once'
+                                    )}
+                                </td>
+                            </tr>
+                        );
+                    })}
                     </tbody>
                 </table>
             </div>
@@ -282,6 +416,17 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                             min={actionFormData.start_date || new Date().toISOString().split('T')[0]}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md"
                         />
+                        <select
+                            value={actionFormData.status}
+                            onChange={(e) => setActionFormData({...actionFormData, status: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                        >
+                            <option value="">Select status</option>
+                            <option value="pending">Pending</option>
+                            <option value="inprogress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
                     </div>
                     <div className="flex justify-end space-x-2">
                         <button
@@ -300,7 +445,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                 </div>
             )}
 
-            {/* Floating Add Action Button - Positioned at bottom right */}
+            {/* Floating Add Action Button */}
             <div className="absolute bottom-4 right-4">
                 {!isAddingAction ? (
                     <button
