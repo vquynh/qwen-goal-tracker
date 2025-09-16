@@ -378,6 +378,9 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
                         );
                     })}
                     </tbody>
+                    <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider invisible">Add action</th>
+                    </tr>
                 </table>
             </div>
 
@@ -446,7 +449,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
             )}
 
             {/* Floating Add Action Button */}
-            <div className="absolute bottom-4 right-4">
+            <div className="absolute bottom-1 right-4">
                 {!isAddingAction ? (
                     <button
                         onClick={() => setIsAddingAction(true)}
