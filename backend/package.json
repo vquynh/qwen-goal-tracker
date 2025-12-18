@@ -11,8 +11,9 @@
       "migration:generate": "npm run typeorm -- migration:generate",
       "migration:run": "npm run typeorm -- migration:run",
       "docs": "swagger-jsdoc -d swaggerConfig.ts -o swagger.json",
-      "test": "jest",
-      "test:watch": "jest --watch",
+      "test": "NODE_ENV=test jest",
+      "test:watch": "NODE_ENV=test jest --watch",
+      "test:coverage": "NODE_ENV=test jest --coverage",
       "lint": "eslint . --ext .ts"
    },
    "dependencies": {

@@ -13,6 +13,10 @@ export class Goal {
     @Column('date')
     deadline: string;
 
-    @OneToMany(() => Action, action => action.goal)
+
+    @OneToMany(() => Action, action => action.goal, {
+        cascade: true, // Enable cascading operations
+        onDelete: 'CASCADE' // Ensure related actions are deleted when a goal is deleted
+    })
     actions: Action[];
 }

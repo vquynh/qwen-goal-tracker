@@ -7,8 +7,13 @@ module.exports = {
     transform: {
         '^.+\\.tsx?$': 'ts-jest',
     },
-    setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-    moduleNameMapper: {
-        '^@/(.*)$': '<rootDir>/src/$1'
-    }
+    setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+    testEnvironmentOptions: {
+        url: 'http://localhost'
+    },
+    collectCoverageFrom: [
+        'src/**/*.ts',
+        '!src/index.ts', // Exclude main entry point
+        '!src/entities/*.ts', // Exclude entities if they're just TypeORM models
+    ]
 };

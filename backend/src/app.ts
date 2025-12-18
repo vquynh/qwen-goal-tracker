@@ -2,7 +2,6 @@
 import express from 'express';
 import { AppDataSource } from './data-source';
 import cors from 'cors';
-import * as path from 'path';
 import {Action} from "./entities/Action";
 import dotenv from "dotenv";
 import swaggerJsDoc from "swagger-jsdoc";
@@ -43,6 +42,12 @@ const actionRepository = AppDataSource.getRepository(Action);
 
 // Routes
 app.post('/goals', async (req, res) => {
+    if(req.body.title === undefined || req.body.title === ''){
+        return res.status(400).json({error: 'Title is required'});
+    }
+    if(req.body.deadline != undefined && Date.parse(req.body.deadline) < Date.now()){
+        return res.status(400).json({error: 'Deadline must be in the future'});
+    }
     const goal = goalRepository.create(req.body);
     await goalRepository.save(goal);
     res.status(201).json(goal);
@@ -68,7 +73,9 @@ app.put('/goals/:id', async (req, res) => {
         relations: ['actions']
     });
     if (!goal) return res.status(404).json({ error: 'Goal not found' });
-
+    if(req.body.deadline != undefined && Date.parse(req.body.deadline) < Date.now()){
+        return res.status(400).json({error: 'Deadline must be in the future'});
+    }
     goalRepository.merge(goal, req.body);
     await goalRepository.save(goal);
     res.json(goal);
@@ -76,7 +83,23 @@ app.put('/goals/:id', async (req, res) => {
 
 app.post('/goals/:id/actions', async (req, res) => {
     const action = actionRepository.create(req.body) as unknown as Action;
-    action.goal = await goalRepository.findOneBy({id: req.params.id});
+    if(req.body.title === undefined || req.body.title === ''){
+        return res.status(400).json({error: 'Title is required'});
+    }
+
+    if(req.body.start_date === undefined || req.body.start_date === ''){
+        return res.status(400).json({error: 'Start date is required'});
+    }
+    if(req.body.end_date === undefined || req.body.end_date === ''){
+        return res.status(400).json({error: 'End date is required'});
+    }
+    if(req.body.start_date != undefined && req.body.end_date != undefined
+        && Date.parse(req.body.start_date) > Date.parse(req.body.end_date)){
+        return res.status(400).json({error: 'Start date must be before end date'});
+    }
+    const goal = await goalRepository.findOneBy({id: req.params.id});
+    if (!goal) return res.status(404).json({ error: 'Goal not found' });
+    action.goal = goal;
     await actionRepository.save(action);
     res.status(201).json(action);
 });
@@ -89,7 +112,10 @@ app.get('/goals/:id/actions', async (req, res) => {
 app.put('/actions/:id', async (req, res) => {
     const action = await actionRepository.findOneBy({ id: req.params.id });
     if (!action) return res.status(404).json({ error: 'Action not found' });
-
+    if(req.body.start_date != undefined && req.body.end_date != undefined
+        && Date.parse(req.body.start_date) > Date.parse(req.body.end_date)){
+        return res.status(400).json({error: 'Start date must be before end date'});
+    }
     actionRepository.merge(action, req.body);
     await actionRepository.save(action);
     res.json(action);

@@ -22,6 +22,8 @@ export class Action {
     @Column({ default: 'pending' })
     status: string;
 
-    @ManyToOne(() => Goal, goal => goal.actions)
+    @ManyToOne(() => Goal, goal => goal.actions, {
+        onDelete: 'CASCADE' // If a goal is deleted, actions are also deleted
+    })
     goal: Goal;
 }
