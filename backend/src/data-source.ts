@@ -2,7 +2,17 @@ import { DataSource } from 'typeorm';
 import { Goal } from './entities/Goal';
 import { Action } from './entities/Action';
 
-export const AppDataSource = new DataSource({
+export const AppDataSource = process.env.DATABASE_URL ?
+    new DataSource({
+        type: "postgres",
+        url: process.env.DATABASE_URL,
+        synchronize: true,
+        logging: true,
+        entities: [Goal, Action],
+        migrations: [__dirname + '/migrations/*.js'],
+        subscribers: [],
+    }) :
+    new DataSource({
     type: process.env.NODE_ENV === 'test' ? 'sqlite' : 'postgres',
     database: process.env.NODE_ENV === 'test' ? ':memory:' : process.env.DATABASE_URL,
     host: process.env.NODE_ENV !== 'test' ? process.env.DB_HOST : undefined,
